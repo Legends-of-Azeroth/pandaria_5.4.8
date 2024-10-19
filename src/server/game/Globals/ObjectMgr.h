@@ -1446,6 +1446,8 @@ class ObjectMgr
         uint32 GenerateMuteID();
         uint64 GenerateBattlePetId();
         uint64 GenerateVoidStorageItemId();
+        uint64 GenerateCreatureSpawnId();
+        uint64 GenerateGameObjectSpawnId();
 
         MailLevelReward const* GetMailLevelReward(uint32 level, uint32 raceMask)
         {
@@ -1820,9 +1822,8 @@ class ObjectMgr
         std::atomic<uint32> _hiPetNumber{ 1 };
         std::atomic<uint64> _voidItemId{ 1 };
         std::atomic<uint32> _battlePetId{ 1 };
-
-        ObjectGuid::LowType _creatureSpawnId;
-        ObjectGuid::LowType _gameObjectSpawnId;
+        std::atomic<uint64> _creatureSpawnId { 1 };
+        std::atomic<uint64> _gameObjectSpawnId { 1 };
 
         // first free low guid for selected guid type
         template<HighGuid high>

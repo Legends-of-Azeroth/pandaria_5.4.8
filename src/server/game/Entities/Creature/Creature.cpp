@@ -1051,11 +1051,8 @@ void Creature::SaveToDB(uint32 mapid, uint16 spawnMask, uint32 phaseMask)
 {
     // update in loaded data
     if (!m_spawnId)
-    {
-        QueryResult result = WorldDatabase.Query("SELECT MAX(guid) + 1 FROM creature");
-        ASSERT(result);
-        m_spawnId = (*result)[0].GetUInt32();
-    }
+        m_spawnId = sObjectMgr->GenerateCreatureSpawnId();
+
     CreatureData& data = sObjectMgr->NewOrExistCreatureData(m_spawnId);
 
     uint32 displayId = GetNativeDisplayId();

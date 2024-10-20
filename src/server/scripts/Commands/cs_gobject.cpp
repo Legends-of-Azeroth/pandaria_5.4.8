@@ -149,9 +149,7 @@ public:
         Map* map = player->GetMap();
 
         GameObject* object = new GameObject;
-        uint32 guidLow = map->GenerateLowGuid<HighGuid::GameObject>();
-
-        if (!object->Create(guidLow, objectInfo->entry, map, player->GetPhaseMgr().GetPhaseMaskForSpawn(), x, y, z, o, { }, 0, GO_STATE_READY))
+        if (!object->Create(map->GenerateLowGuid<HighGuid::GameObject>(), objectInfo->entry, map, player->GetPhaseMgr().GetPhaseMaskForSpawn(), x, y, z, o, { }, 0, GO_STATE_READY))
         {
             delete object;
             return false;
@@ -168,18 +166,19 @@ public:
 
         // fill the gameobject data and save to the db
         object->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), player->GetPhaseMgr().GetPhaseMaskForSpawn());
+        ObjectGuid::LowType spawnId = object->GetDBTableGUIDLow();
 
         // this will generate a new guid if the object is in an instance
-        if (!object->LoadGameObjectFromDB(guidLow, map))
+        if (!object->LoadGameObjectFromDB(spawnId, map))
         {
             delete object;
             return false;
         }
 
         /// @todo is it really necessary to add both the real and DB table guid here ?
-        sObjectMgr->AddGameobjectToGrid(guidLow, sObjectMgr->GetGOData(guidLow));
+        sObjectMgr->AddGameobjectToGrid(spawnId, sObjectMgr->GetGOData(spawnId));
 
-        handler->PSendSysMessage(LANG_GAMEOBJECT_ADD, objectId, objectInfo->name.c_str(), guidLow, x, y, z);
+        handler->PSendSysMessage(LANG_GAMEOBJECT_ADD, objectId, objectInfo->name.c_str(), spawnId, x, y, z);
         return true;
     }
 

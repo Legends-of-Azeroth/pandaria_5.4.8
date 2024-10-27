@@ -6882,16 +6882,7 @@ void Spell::EffectBind(SpellEffIndex effIndex)
     }
 
     player->SetHomebind(homeLoc, areaId);
-
-    // binding
-    WorldPacket data(SMSG_BINDPOINTUPDATE, 4 + 4 + 4 + 4 + 4);
-    data << float(homeLoc.GetPositionX());
-    data << float(homeLoc.GetPositionY());
-    data << float(homeLoc.GetPositionZ());
-    data << uint32(areaId);
-    data << uint32(homeLoc.GetMapId());
-
-    player->SendDirectMessage(&data);
+    player->SendBindPointUpdate();
 
     TC_LOG_DEBUG("spells", "EffectBind: New homebind X: %f, Y: %f, Z: %f, MapId: %u, AreaId: %u",
         homeLoc.GetPositionX(), homeLoc.GetPositionY(), homeLoc.GetPositionZ(), homeLoc.GetMapId(), areaId);
@@ -6899,7 +6890,7 @@ void Spell::EffectBind(SpellEffIndex effIndex)
     ObjectGuid guid = m_caster->GetGUID();
 
     // zone update
-    data.Initialize(SMSG_PLAYERBOUND, 1 + 8 + 4);
+    WorldPacket data(SMSG_PLAYERBOUND, 1 + 8 + 4);
     data.WriteBit(guid[2]);
     data.WriteBit(guid[4]);
     data.WriteBit(guid[0]);

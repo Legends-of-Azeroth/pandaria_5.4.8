@@ -188,6 +188,18 @@ namespace WorldPackets
             uint32 Timer = 0;
         };
 
+        class BindPointUpdate final : public ServerPacket
+        {
+        public:
+            BindPointUpdate() : ServerPacket(SMSG_BIND_POINT_UPDATE, 20) { }
+
+            WorldPacket const* Write() override;
+
+            uint32 BindMapID = 0;
+            Position BindPosition;
+            uint32 BindAreaID = 0;
+        };
+
         class Dismount final : public ServerPacket
         {
         public:

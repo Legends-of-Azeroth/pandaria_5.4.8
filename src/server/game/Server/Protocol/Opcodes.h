@@ -604,7 +604,7 @@ enum OpcodeServer : uint16
     SMSG_BATTLE_PET_SLOT_UPDATE                                  = 0x16AF,
     SMSG_BATTLE_PET_UPDATE                                       = 0x041A,
     SMSG_BINDER_CONFIRM                                          = 0x1287,
-    SMSG_BINDPOINTUPDATE                                         = 0x0E3B,
+    SMSG_BIND_POINT_UPDATE                                       = 0x0E3B,
     SMSG_BLACK_MARKET_BID_ON_ITEM_RESULT                         = 0x148A,
     SMSG_BLACK_MARKET_OPEN_RESULT                                = 0x00AE,
     SMSG_BLACK_MARKET_OUTBID                                     = 0x1040,

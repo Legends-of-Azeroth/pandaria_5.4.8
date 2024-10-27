@@ -174,6 +174,17 @@ WorldPacket const* WorldPackets::Misc::StopMirrorTimer::Write()
     return &_worldPacket;
 }
 
+WorldPacket const* WorldPackets::Misc::BindPointUpdate::Write()
+{
+    _worldPacket << BindPosition.GetPositionX();
+    _worldPacket << BindPosition.GetPositionY();
+    _worldPacket << BindPosition.GetPositionZ();
+    _worldPacket << uint32(BindAreaID);    
+    _worldPacket << uint32(BindMapID);
+
+    return &_worldPacket;
+}
+
 WorldPacket const* WorldPackets::Misc::Dismount::Write()
 {
     _worldPacket.WriteBit(Guid[6]);

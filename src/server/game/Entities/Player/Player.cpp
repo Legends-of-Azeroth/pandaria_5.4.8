@@ -18513,6 +18513,15 @@ void Player::SetHomebind(WorldLocation const& loc, uint32 areaId)
     CharacterDatabase.Execute(stmt);
 }
 
+void Player::SendBindPointUpdate()
+{
+    WorldPackets::Misc::BindPointUpdate packet;
+    packet.BindPosition = Position(m_homebindX, m_homebindY, m_homebindZ);
+    packet.BindMapID = m_homebindMapId;
+    packet.BindAreaID = m_homebindAreaId;
+    SendDirectMessage(packet.Write());
+}
+
 uint32 Player::GetUInt32ValueFromArray(Tokenizer const& data, uint16 index)
 {
     if (index >= data.size())
@@ -25228,13 +25237,7 @@ void Player::SendInitialPacketsBeforeAddToMap()
     // guild bank list wtf?
 
     // Homebind
-    WorldPacket data(SMSG_BINDPOINTUPDATE, 4 + 4 + 4 + 4 + 4);
-    data << m_homebindX;
-    data << m_homebindZ;
-    data << m_homebindY;
-    data << (uint32) m_homebindAreaId;
-    data << (uint32) m_homebindMapId;
-    GetSession()->SendPacket(&data);
+    SendBindPointUpdate();
 
     SendTalentsInfoData(); // SMSG_TALENTS_INFO
     SendInitialSpells();   // SMSG_INITIAL_SPELLS
@@ -25247,7 +25250,7 @@ void Player::SendInitialPacketsBeforeAddToMap()
 
     SendEquipmentSetList();
 
-    data.Initialize(SMSG_LOGIN_SETTIMESPEED, 20);
+    WorldPacket data(SMSG_LOGIN_SETTIMESPEED, 20);
     data << uint32(0);
     data.AppendPackedTime(sWorld->GetGameTime());
     data << uint32(0);

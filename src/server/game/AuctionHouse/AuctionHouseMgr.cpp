@@ -609,7 +609,7 @@ void AuctionHouseObject::Update()
     // Clear expired throttled players
     for (PlayerGetAllThrottleMap::const_iterator itr = GetAllThrottleMap.begin(); itr != GetAllThrottleMap.end();)
     {
-        if (itr->second <= curTime)
+        if (itr->second.NextAllowedReplication <= curTime)
             itr = GetAllThrottleMap.erase(itr);
         else
             ++itr;
@@ -694,7 +694,7 @@ void AuctionHouseObject::BuildListAuctionItems(WorldPacket& data, Player* player
     time_t curTime = GameTime::GetGameTime();
 
     PlayerGetAllThrottleMap::const_iterator itr = GetAllThrottleMap.find(player->GetGUID());
-    time_t throttleTime = itr != GetAllThrottleMap.end() ? itr->second : curTime;
+    time_t throttleTime = itr != GetAllThrottleMap.end() ? itr->second.NextAllowedReplication : curTime;
 
     if (getall && throttleTime <= curTime)
     {
@@ -716,7 +716,7 @@ void AuctionHouseObject::BuildListAuctionItems(WorldPacket& data, Player* player
             if (count >= MAX_GETALL_RETURN)
                 break;
         }
-        GetAllThrottleMap[player->GetGUID()] = curTime + sWorld->getIntConfig(CONFIG_AUCTION_GETALL_DELAY);
+        GetAllThrottleMap[player->GetGUID()].NextAllowedReplication = curTime + sWorld->getIntConfig(CONFIG_AUCTION_GETALL_DELAY);
         return;
     }
 
@@ -849,6 +849,92 @@ bool AuctionEntry::BuildAuctionInfo(WorldPacket& data, Item* sourceItem) const
     data << bidder.GetRawValue();                                   // auction->bidder current
     data << uint64(bid);                                            // current bid
     return true;
+}
+
+void AuctionHouseObject::BuildReplicate(WorldPackets::AuctionHouse::AuctionReplicateResponse& auctionReplicateResult, Player* player,
+    uint32 global, uint32 cursor, uint32 tombstone, uint32 count)
+{
+    time_t curTime = sWorld->GetGameTime();
+
+    auto throttleItr = GetAllThrottleMap.find(player->GetGUID());
+    if (throttleItr != GetAllThrottleMap.end())
+    {
+        if (throttleItr->second.Global != global || throttleItr->second.Cursor != cursor || throttleItr->second.Tombstone != tombstone)
+            return;
+
+        if (!throttleItr->second.IsReplicationInProgress() && throttleItr->second.NextAllowedReplication > curTime)
+            return;
+    }
+    else
+    {
+        throttleItr = GetAllThrottleMap.insert({ player->GetGUID(), PlayerGetAllThrottleData{} }).first;
+        throttleItr->second.NextAllowedReplication = curTime + sWorld->getIntConfig(CONFIG_AUCTION_GETALL_DELAY);
+        throttleItr->second.Global = uint32(curTime);
+    }
+
+    if (AuctionsMap.empty() || !count)
+        return;
+
+    auto itr = AuctionsMap.upper_bound(cursor);
+    for (; itr != AuctionsMap.end(); ++itr)
+    {
+        AuctionEntry* auction = itr->second;
+        if (auction->expire_time < curTime)
+            continue;
+
+        Item* item = sAuctionMgr->GetAItem(auction->itemGUIDLow);
+        if (!item)
+            continue;
+
+        auction->BuildAuctionInfo(auctionReplicateResult.Items, true, item);
+        if (!--count)
+            break;
+    }
+
+    auctionReplicateResult.ChangeNumberGlobal = throttleItr->second.Global;
+    auctionReplicateResult.ChangeNumberCursor = throttleItr->second.Cursor = !auctionReplicateResult.Items.empty() ? auctionReplicateResult.Items.back().AuctionItemID : 0;
+    auctionReplicateResult.ChangeNumberTombstone = throttleItr->second.Tombstone = !count ? AuctionsMap.rbegin()->first : 0;
+}
+
+void AuctionEntry::BuildAuctionInfo(std::vector<WorldPackets::AuctionHouse::AuctionItem>& items, bool listAuctionItems, Item* sourceItem /*= nullptr*/) const
+{
+    Item* item = (sourceItem) ? sourceItem : sAuctionMgr->GetAItem(itemGUIDLow);
+    if (!item)
+    {
+        TC_LOG_ERROR("misc", "AuctionEntry::BuildAuctionInfo: Auction %u has a non-existent item: %u", Id, itemGUIDLow);
+        return;
+    }
+
+    WorldPackets::AuctionHouse::AuctionItem auctionItem;
+
+    auctionItem.AuctionItemID = Id;
+    auctionItem.Item.Initialize(item);
+    auctionItem.BuyoutPrice = buyout;
+    auctionItem.CensorBidInfo = false;
+    auctionItem.CensorServerSideInfo = listAuctionItems;
+    auctionItem.Charges = item->GetSpellCharges();
+    auctionItem.Count = item->GetCount();
+    auctionItem.DeleteReason = 0; // Always 0 ?
+    auctionItem.DurationLeft = (expire_time - time(NULL)) * IN_MILLISECONDS;
+    auctionItem.EndTime = expire_time;
+    auctionItem.Flags = 0; // todo
+    auctionItem.ItemGuid = item->GetGUID();
+    auctionItem.MinBid = startbid;
+    auctionItem.Owner = ObjectGuid::Create<HighGuid::Player>(owner);
+    auctionItem.OwnerAccountID = ObjectGuid(HighGuid::WowAccount, sObjectMgr->GetPlayerAccountIdByGUID(auctionItem.Owner));
+    auctionItem.MinIncrement = bidder ? GetAuctionOutBid() : 0;
+    auctionItem.Bidder = bidder ? ObjectGuid::Create<HighGuid::Player>(bidder) : ObjectGuid::Empty;
+    auctionItem.BidAmount = bidder ? bid : 0;
+
+    for (uint8 i = 0; i < MAX_INSPECTED_ENCHANTMENT_SLOT; i++)
+    {
+        if (!item->GetEnchantmentId((EnchantmentSlot)i))
+            continue;
+
+        auctionItem.Enchantments.emplace_back(item->GetEnchantmentId((EnchantmentSlot)i), item->GetEnchantmentDuration((EnchantmentSlot)i), item->GetEnchantmentCharges((EnchantmentSlot)i), i);
+    }
+
+    items.emplace_back(auctionItem);
 }
 
 uint32 AuctionEntry::GetAuctionCut() const

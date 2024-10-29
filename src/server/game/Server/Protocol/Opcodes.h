@@ -565,6 +565,7 @@ enum OpcodeServer : uint16
     SMSG_AUCTION_LIST_RESULT                                     = 0x0982,
     SMSG_AUCTION_OWNER_LIST_RESULT                               = 0x1785,
     SMSG_AUCTION_OWNER_NOTIFICATION                              = 0x1A8E,
+    SMSG_AUCTION_REPLICATE_RESPONSE                              = 0x1AAB,
     SMSG_AURA_UPDATE                                             = 0x0072,
     SMSG_AUTH_CHALLENGE                                          = 0x0949,
     SMSG_AUTH_RESPONSE                                           = 0x0ABA,

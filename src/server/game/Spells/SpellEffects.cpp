@@ -2197,7 +2197,7 @@ void Spell::SendLoot(ObjectGuid guid, LootType loottype)
         if (sScriptMgr->OnGossipHello(player, gameObjTarget))
             return;
 
-        if (gameObjTarget->AI()->OnGossipHello(player))
+        if (gameObjTarget->AI()->OnGossipHello(player, true))
             return;
 
         switch (gameObjTarget->GetGoType())

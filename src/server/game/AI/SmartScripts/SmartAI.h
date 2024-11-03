@@ -276,7 +276,7 @@ class TC_GAME_API SmartGameObjectAI : public GameObjectAI
         SmartScript* GetScript() { return &mScript; }
         static int Permissible(const GameObject* g);
 
-        bool OnGossipHello(Player* player) override;
+        bool OnGossipHello(Player* player, bool isUse) override;
         bool OnReportUse(Player* player) override;
         bool OnGossipSelect(Player* player, uint32 sender, uint32 action) override;
         bool OnGossipSelectCode(Player* /*player*/, uint32 /*sender*/, uint32 /*action*/, const char* /*code*/) override;

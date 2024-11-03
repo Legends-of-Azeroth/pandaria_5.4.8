@@ -372,6 +372,8 @@ class TC_GAME_API GameObject : public WorldObject, public GridObject<GameObject>
         time_t      m_cooldownTime;                         // used as internal reaction delay time store (not state change reaction).
         uint32      m_trapCooldownTime = 0;                 // higher resolution timer than time_t, used only for traps
 
+        GOState     m_prevGoState;                          // What state to set whenever resetting
+
         std::list<uint32> m_SkillupList;
 
         Player* m_ritualOwner;                              // used for GAMEOBJECT_TYPE_SUMMONING_RITUAL where GO is not summoned (no owner)

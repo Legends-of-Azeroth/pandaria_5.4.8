@@ -2000,8 +2000,11 @@ class go_horridon_orb_of_control : public GameObjectScript
         {
             go_horridon_orb_of_control_AI(GameObject *go) : GameObjectAI(go) { }
 
-            bool OnGossipHello(Player* player) override
+            bool OnGossipHello(Player* player, bool isUse) override
             {
+                if (!isUse)
+                    return true;
+
                 if (uint32 spellId = GetControlSpellByOrb(me->GetEntry()))
                 {
                     player->CastSpell(player, spellId, true);

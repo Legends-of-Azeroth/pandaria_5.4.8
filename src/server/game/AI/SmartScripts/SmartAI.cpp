@@ -1002,7 +1002,7 @@ void SmartGameObjectAI::Reset()
 }
 
 // Called when a player opens a gossip dialog with the gameobject.
-bool SmartGameObjectAI::OnGossipHello(Player* player)
+bool SmartGameObjectAI::OnGossipHello(Player* player, bool /*isUse*/)
 {
     _gossipReturn = false;
     GetScript()->ProcessEventsFor(SMART_EVENT_GOSSIP_HELLO, player, 0, 0, false, nullptr, me);

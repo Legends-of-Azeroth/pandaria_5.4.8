@@ -22,6 +22,7 @@
 #include "ObjectMgr.h"
 #include "ScriptedEscortAI.h"
 #include "CombatAI.h"
+#include "GameObjectAI.h"
 #include "PassiveAI.h"
 #include "Player.h"
 #include "SpellInfo.h"
@@ -310,19 +311,33 @@ public:
 
 class go_acherus_soul_prison : public GameObjectScript
 {
-public:
-    go_acherus_soul_prison() : GameObjectScript("go_acherus_soul_prison") { }
+    public:
+        go_acherus_soul_prison() : GameObjectScript("go_acherus_soul_prison") { }
 
-    bool OnGossipHello(Player* player, GameObject* go) override
-    {
-        if (Creature* anchor = go->FindNearestCreature(29521, 15))
-            if (ObjectGuid prisonerGUID = anchor->AI()->GetGUID())
-                if (Creature* prisoner = Creature::GetCreature(*player, prisonerGUID))
-                    CAST_AI(npc_unworthy_initiate::npc_unworthy_initiateAI, prisoner->AI())->EventStart(anchor, player);
+        struct go_acherus_soul_prisonAI : public GameObjectAI
+        {
+            go_acherus_soul_prisonAI(GameObject* go) : GameObjectAI(go)
+            {
+            }
 
-        return false;
-    }
+            bool OnGossipHello(Player* player, bool isUse) override
+            {
+                if (!isUse)
+                    return true;
 
+                if (Creature* anchor = me->FindNearestCreature(29521, 15))
+                    if (ObjectGuid prisonerGUID = anchor->AI()->GetGUID())
+                        if (Creature* prisoner = Creature::GetCreature(*player, prisonerGUID))
+                            CAST_AI(npc_unworthy_initiate::npc_unworthy_initiateAI, prisoner->AI())->EventStart(anchor, player);
+
+                return false;
+            }
+        };
+
+        GameObjectAI* GetAI(GameObject* go) const override
+        {
+            return new go_acherus_soul_prisonAI(go);
+        }
 };
 
 enum EyeOfAcherusMisc

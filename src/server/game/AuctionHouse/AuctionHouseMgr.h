@@ -96,6 +96,7 @@ struct AuctionEntry
     uint32 GetAuctionCut() const;
     uint32 GetAuctionOutBid() const;
     bool BuildAuctionInfo(WorldPacket & data, Item* sourceItem = nullptr) const;
+    void BuildAuctionInfo(std::vector<WorldPackets::AuctionHouse::AuctionItem>& items, bool listAuctionItems, Item* sourceItem = nullptr) const;
     void DeleteFromDB(CharacterDatabaseTransaction& trans) const;
     void SaveToDB(CharacterDatabaseTransaction& trans) const;
     bool LoadFromDB(Field* fields);
@@ -114,7 +115,18 @@ class AuctionHouseObject
     }
 
     typedef std::map<uint32, AuctionEntry*> AuctionEntryMap;
-    typedef std::unordered_map<ObjectGuid, time_t> PlayerGetAllThrottleMap;
+
+    struct PlayerGetAllThrottleData
+    {
+        uint32 Global = 0;
+        uint32 Cursor = 0;
+        uint32 Tombstone = 0;
+        time_t NextAllowedReplication = 0;
+
+        bool IsReplicationInProgress() const { return Cursor != Tombstone && Global != 0; }
+    };
+
+    typedef std::unordered_map<ObjectGuid, PlayerGetAllThrottleData> PlayerGetAllThrottleMap;
 
     uint32 Getcount() const { return AuctionsMap.size(); }
 

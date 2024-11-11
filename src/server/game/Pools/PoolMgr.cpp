@@ -17,6 +17,7 @@
 
 #include "PoolMgr.h"
 #include "Containers.h"
+#include "GameEventMgr.h"
 #include "ObjectMgr.h"
 #include "Log.h"
 #include "MapManager.h"
@@ -350,6 +351,11 @@ void PoolGroup<Creature>::Spawn1Object(ActivePoolData& spawns, PoolObject* obj)
 {
     if (CreatureData const* data = sObjectMgr->GetCreatureData(obj->guid))
     {
+        if (data->gameEventId && !sGameEventMgr->IsActiveEvent(data->gameEventId))
+            return;
+
+        sObjectMgr->AddCreatureToGrid(obj->guid, data);
+
         // Spawn if necessary (loaded grids only)
         // We use spawn coords to spawn
         if (spawns.GetMap()->IsGridLoaded(data->posX, data->posY))
@@ -371,6 +377,11 @@ void PoolGroup<GameObject>::Spawn1Object(ActivePoolData& spawns, PoolObject* obj
 {
     if (GameObjectData const* data = sObjectMgr->GetGOData(obj->guid))
     {
+        if (data->gameEventId && !sGameEventMgr->IsActiveEvent(data->gameEventId))
+            return;
+
+        sObjectMgr->AddGameobjectToGrid(obj->guid, data);
+
         // Spawn if necessary (loaded grids only)
         // We use current coords to unspawn, not spawn coords since creature can have changed grid
         if (spawns.GetMap()->IsGridLoaded(data->posX, data->posY))

@@ -1448,8 +1448,11 @@ class go_inversion : public GameObjectScript
         {
             go_inversionAI(GameObject* go) : GameObjectAI(go) { }
 
-            bool OnGossipHello(Player* player) override
+            bool OnGossipHello(Player* player, bool isUse) override
             {
+                if (!isUse)
+                    return true;
+
                 if (!player->IsInCombat())
                     return true;
 
@@ -1483,8 +1486,11 @@ class go_cancel : public GameObjectScript
         {
             go_cancelAI(GameObject* go) : GameObjectAI(go) { }
 
-            bool OnGossipHello(Player* player) override
+            bool OnGossipHello(Player* player, bool isUse) override
             {
+                if (!isUse)
+                    return true;
+
                 if (!player->IsInCombat())
                     return true;
 

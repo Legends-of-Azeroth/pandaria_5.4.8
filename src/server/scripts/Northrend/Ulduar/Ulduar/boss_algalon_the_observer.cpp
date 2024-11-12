@@ -1170,8 +1170,11 @@ class go_celestial_planetarium_access : public GameObjectScript
         {
             go_celestial_planetarium_accessAI(GameObject* go) : GameObjectAI(go) { }
 
-            bool OnGossipHello(Player* player) override
+            bool OnGossipHello(Player* player, bool isUse) override
             {
+                if (!isUse)
+                    return true;
+
                 if (me->HasFlag(GAMEOBJECT_FIELD_FLAGS, GO_FLAG_IN_USE))
                     return false;
                 if (me->FindNearestCreature(NPC_BRANN_BRONZBEARD_ALG, 50.0f))

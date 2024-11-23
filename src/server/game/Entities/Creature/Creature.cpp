@@ -213,7 +213,7 @@ lootForPickPocketed(false), lootForBody(false), m_groupLootTimer(0), lootingGrou
 m_PlayerDamageReq(0), m_lootRecipient(), m_lootRecipientGroup(0), m_corpseRemoveTime(0), m_respawnTime(0),
 m_respawnDelay(300), m_corpseDelay(60), m_wanderDistance(0.0f), m_WalkMode(0.0f), m_reactState(REACT_AGGRESSIVE),
 m_defaultMovementType(IDLE_MOTION_TYPE), m_spawnId(0), m_equipmentId(0), m_originalEquipmentId(0), m_AlreadyCallAssistance(false),
-m_AlreadySearchedAssistance(false), m_regenHealth(true), m_AI_locked(false), m_meleeDamageSchoolMask(SPELL_SCHOOL_MASK_NORMAL),
+m_AlreadySearchedAssistance(false), m_cannotReachTarget(false), m_cannotReachTimer(0), m_regenHealth(true), m_AI_locked(false), m_meleeDamageSchoolMask(SPELL_SCHOOL_MASK_NORMAL),
 m_creatureInfo(nullptr), m_creatureData(nullptr), m_path_id(0), m_formation(nullptr), m_triggerJustAppeared(false), m_respawnDelayMax(0), dynamicHealthPlayersCount(0)
 {
     m_regenTimer = 0;
@@ -682,6 +682,15 @@ void Creature::Update(uint32 diff)
             m_regenTimer += diff;
 
             Regenerate();
+
+            if (CanNotReachTarget() && !IsInEvadeMode() && !GetMap()->IsRaid())
+            {
+                m_cannotReachTimer += diff;
+                if (m_cannotReachTimer >= CREATURE_NOPATH_EVADE_TIME)
+                    if (CreatureAI* ai = AI())
+                        ai->EnterEvadeMode(); // TODO missing EVADE_REASON
+                        // ai->EnterEvadeMode(CreatureAI::EVADE_REASON_NO_PATH);
+            }            
             break;
         }
         default:
@@ -2735,6 +2744,18 @@ uint32 Creature::GetPetAutoSpellOnPos(uint8 pos) const
         return 0;
     else
         return m_charmInfo->GetCharmSpell(pos)->GetAction();
+}
+
+void Creature::SetCannotReachTarget(bool cannotReach)
+{
+    if (cannotReach == m_cannotReachTarget)
+        return;
+    m_cannotReachTarget = cannotReach;
+    m_cannotReachTimer = 0;
+
+    if (cannotReach)
+        TC_LOG_DEBUG("entities.unit.chase", "Creature::SetCannotReachTarget() called with true");
+        // TC_LOG_DEBUG("entities.unit.chase", "Creature::SetCannotReachTarget() called with true. Details: s%", GetDebugInfo()); // TODO GetDebugInfo missing
 }
 
 void Creature::SetPosition(float x, float y, float z, float o)

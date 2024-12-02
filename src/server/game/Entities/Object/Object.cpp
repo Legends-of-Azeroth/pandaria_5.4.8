@@ -3535,9 +3535,9 @@ void WorldObject::UpdateAreaAndZonePhase()
         {
             bool up = false;
             uint32 phaseGroup = uint32((*itr)->GetMiscValueB());
-            std::set<uint32> const& phases = GetPhasesForGroup(phaseGroup);
-            for (uint32 phase : phases)
-                up = SetPhased(phase, false, true);
+            std::vector<uint32> const* phasesInGroup = sDBCManager.GetPhasesForGroup(phaseGroup);
+            for (uint32 phaseId : *phasesInGroup)
+                up = SetPhased(phaseId, false, true);
             if (!updateNeeded && up)
                 updateNeeded = true;
         }
@@ -3934,7 +3934,7 @@ WMOAreaTableEntry const* WorldObject::GetWMOArea() const
 
     if (map->GetAreaInfo(m_phaseMask, GetPositionX(), GetPositionY(), GetPositionZ(), mogpFlags, adtId, rootId, groupId))
     {
-        const WMOAreaTableEntry * wmoEntry = GetWMOAreaTableEntryByTripple(rootId, adtId, groupId);
+        const WMOAreaTableEntry * wmoEntry = sDBCManager.GetWMOAreaTableEntryByTripple(rootId, adtId, groupId);
         if (wmoEntry)
             return wmoEntry;
     }
@@ -3945,7 +3945,7 @@ WMOAreaTableEntry const* WorldObject::GetWMOArea() const
 uint32 WorldObject::GetWMOAreaId() const
 {
     if (WMOAreaTableEntry const * wmoEntry = GetWMOArea())
-        return wmoEntry->Id;
+        return wmoEntry->ID;
     return 0;
 }
 

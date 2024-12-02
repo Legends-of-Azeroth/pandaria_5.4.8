@@ -1,5 +1,5 @@
 /*
-* This file is part of the Pandaria 5.4.8 Project. See THANKS file for Copyright information
+* This file is part of the Legends of Azeroth Pandaria Project. See THANKS file for Copyright information
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -172,15 +172,15 @@ bool ItemChatLink::Initialize(std::istringstream& iss)
     return true;
 }
 
-inline std::string ItemChatLink::FormatName(uint8 index, ItemLocale const* locale, DbcStr const* suffixStrings) const
+inline std::string ItemChatLink::FormatName(uint8 index, ItemLocale const* locale, char const* suffixStrings) const
 {
     std::stringstream ss;
     if (locale == NULL || index >= locale->Name.size())
         ss << _item->Name1;
     else
         ss << locale->Name[index];
-    if (suffixStrings && (*suffixStrings)[index][0] != '\0')
-        ss << ' ' << (*suffixStrings)[index];
+    if (suffixStrings && (*suffixStrings) != '\0')
+        ss << ' ' << (*suffixStrings);
     return ss.str();
 }
 
@@ -188,7 +188,7 @@ bool ItemChatLink::ValidateName(char* buffer, const char* context)
 {
     ChatLink::ValidateName(buffer, context);
 
-    auto suffixStrings = _suffix ? &_suffix->nameSuffix : (_property ? &_property->nameSuffix : NULL);
+    auto suffixStrings = _suffix ? _suffix->nameSuffix : (_property ? _property->nameSuffix : NULL);
 
     bool res = (FormatName(LOCALE_enUS, NULL, suffixStrings) == buffer);
     if (!res)
@@ -313,8 +313,8 @@ bool SpellChatLink::ValidateName(char* buffer, const char* context)
 
         for (uint8 i = 0; i < TOTAL_LOCALES; ++i)
         {
-            uint32 skillLineNameLength = strlen(skillLine->name[i]);
-            if (skillLineNameLength > 0 && strncmp(skillLine->name[i], buffer, skillLineNameLength) == 0 && strlen(buffer) >= skillLineNameLength + 2)
+            uint32 skillLineNameLength = strlen(skillLine->name);
+            if (skillLineNameLength > 0 && strncmp(skillLine->name, buffer, skillLineNameLength) == 0 && strlen(buffer) >= skillLineNameLength + 2)
             {
                 // found the prefix, remove it to perform spellname validation below
                 // -2 = strlen(": ")
@@ -325,7 +325,7 @@ bool SpellChatLink::ValidateName(char* buffer, const char* context)
     }
 
     for (uint8 i = 0; i < TOTAL_LOCALES; ++i)
-        if (*_spell->SpellName[i] && strcmp(_spell->SpellName[i], buffer) == 0)
+        if (*_spell->SpellName && strcmp(_spell->SpellName, buffer) == 0)
             return true;
 
     TC_LOG_TRACE("chat.system", "ChatHandler::isValidChatMessage('%s'): linked spell (id: %u) name wasn't found in any localization", context, _spell->Id);
@@ -383,7 +383,7 @@ bool AchievementChatLink::ValidateName(char* buffer, const char* context)
     ChatLink::ValidateName(buffer, context);
 
     for (uint8 i = 0; i < TOTAL_LOCALES; ++i)
-        if (*_achievement->Name[i] && strcmp(_achievement->Name[i], buffer) == 0)
+        if (*_achievement->Name && strcmp(_achievement->Name, buffer) == 0)
             return true;
 
     TC_LOG_TRACE("chat.system", "ChatHandler::isValidChatMessage('%s'): linked achievement (id: %u) name wasn't found in any localization", context, _achievement->ID);
@@ -557,7 +557,7 @@ bool CurrencyLink::ValidateName(char* buffer, char const* context)
 {
     ChatLink::ValidateName(buffer, context);
     for (uint8 i = 0; i < TOTAL_LOCALES; ++i)
-        if (*_currency->Name[i] && strcmp(_currency->Name[i], buffer) == 0)
+        if (*_currency->Name && strcmp(_currency->Name, buffer) == 0)
             return true;
     return false;
 }

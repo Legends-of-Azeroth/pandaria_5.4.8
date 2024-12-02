@@ -2333,7 +2333,7 @@ void WorldSession::HandleRequestHotfix(WorldPacket& recvPacket)
     uint32 type, count;
     recvPacket >> type;
 
-    DB2StorageBase const* store = GetDB2Storage(type);
+    DB2StorageBase const* store = sDB2Manager.GetStorage(type);
     if (!store)
     {
         TC_LOG_DEBUG("network", "CMSG_REQUEST_HOTFIX: Received unknown hotfix type: %u", type);

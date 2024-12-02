@@ -1450,7 +1450,7 @@ void Spell::EffectPowerBurn(SpellEffIndex effIndex)
         return;
 
     if (unitTarget->GetPowerType() != powerType)
-        if (m_spellInfo->Id != 108222 || GetPowerIndexByClass(powerType, unitTarget->GetClass()) == MAX_POWERS) // Mana Void (Cobalt Globule)
+        if (m_spellInfo->Id != 108222 || sDBCManager.GetPowerIndexByClass(powerType, unitTarget->GetClass()) == MAX_POWERS) // Mana Void (Cobalt Globule)
             return;
 
     // burn x% of target's mana, up to maximum of 2x% of caster's mana (Mana Burn)

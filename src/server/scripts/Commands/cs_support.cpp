@@ -1,5 +1,5 @@
 /*
-* This file is part of the Pandaria 5.4.8 Project. See THANKS file for Copyright information
+* This file is part of the Legends of Azeroth Pandaria Project. See THANKS file for Copyright information
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -2759,8 +2759,8 @@ public:
             {
                 if (auto&& skill = sSkillLineStore.LookupEntry(i))
                 {
-                    std::string skillName = skill->name[LOCALE_enUS];
-                    std::string desc = skill->description[LOCALE_enUS];
+                    std::string skillName = skill->name;
+                    std::string desc = skill->description;
                     if ((skill->categoryId == 9 && !desc.empty()) || skill->categoryId == 11)
                     {
                         if (player->HasSkill(skill->id))
@@ -2787,8 +2787,8 @@ public:
                     uint32 value = fields[1].GetUInt32();
                     if (auto&& skill = sSkillLineStore.LookupEntry(skillId))
                     {
-                        std::string skillName = skill->name[LOCALE_enUS];
-                        std::string desc = skill->description[LOCALE_enUS];
+                        std::string skillName = skill->name;
+                        std::string desc = skill->description;
                         if ((skill->categoryId == 9 && !desc.empty()) || skill->categoryId == 11)
                             handler->PSendSysMessage("%s - %u (value %u)", skillName.c_str(), skill->id, value);
                     }

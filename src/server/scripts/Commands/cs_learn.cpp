@@ -1,5 +1,5 @@
 /*
-* This file is part of the Pandaria 5.4.8 Project. See THANKS file for Copyright information
+* This file is part of the Legends of Azeroth Pandaria Project. See THANKS file for Copyright information
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -113,7 +113,7 @@ public:
         else
             targetPlayer->LearnSpell(spell, false);
 
-        if (GetTalentSpellCost(spellInfo->GetFirstRankSpell()->Id))
+        if (sDBCManager.GetTalentSpellCost(spellInfo->GetFirstRankSpell()->Id))
             targetPlayer->SendTalentsInfoData();
 
         return true;
@@ -174,7 +174,7 @@ public:
                 continue;
 
             // skip spells with first rank learned as talent (and all talents then also)
-            if (GetTalentSpellCost(spellInfo->GetFirstRankSpell()->Id) > 0)
+            if (sDBCManager.GetTalentSpellCost(spellInfo->GetFirstRankSpell()->Id) > 0)
                 continue;
 
             // skip broken spells
@@ -466,7 +466,7 @@ public:
         else
             handler->SendSysMessage(LANG_FORGET_SPELL);
 
-        if (GetTalentSpellCost(spellId))
+        if (sDBCManager.GetTalentSpellCost(spellId))
             target->SendTalentsInfoData();
 
         return true;

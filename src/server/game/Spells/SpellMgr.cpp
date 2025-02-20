@@ -1,5 +1,5 @@
 /*
-* This file is part of the Pandaria 5.4.8 Project. See THANKS file for Copyright information
+* This file is part of the Legends of Azeroth Pandaria Project. See THANKS file for Copyright information
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -1380,7 +1380,7 @@ void SpellMgr::LoadSpellLearnSkills()
                 else
                     dbcNode.value = 1;
 
-                auto entry = GetSkillRaceClassInfo(dbcNode.skill, 0, 0);
+                auto entry = sDBCManager.GetSkillRaceClassInfo(dbcNode.skill, 0, 0);
                 if (entry)
                 {
                     auto skillTier = sSkillTiersStore.LookupEntry(entry->SkillTierId);
@@ -1446,7 +1446,7 @@ void SpellMgr::LoadSpellLearnSpells()
             continue;
         }
 
-        if (GetTalentSpellCost(node.spell))
+        if (sDBCManager.GetTalentSpellCost(node.spell))
         {
             TC_LOG_ERROR("sql.sql", "Spell %u listed in `spell_learn_spell` attempt learning talent spell %u, skipped", spell_id, node.spell);
             continue;
@@ -1484,7 +1484,7 @@ void SpellMgr::LoadSpellLearnSpells()
                 // talent or passive spells or skill-step spells auto-casted and not need dependent learning,
                 // pet teaching spells must not be dependent learning (casted)
                 // other required explicit dependent learning
-                dbc_node.autoLearned = entry->Effects[i].TargetA.GetTarget() == TARGET_UNIT_PET || GetTalentSpellCost(spell) > 0 || entry->IsPassive() || entry->HasEffect(SPELL_EFFECT_SKILL_STEP);
+                dbc_node.autoLearned = entry->Effects[i].TargetA.GetTarget() == TARGET_UNIT_PET || sDBCManager.GetTalentSpellCost(spell) > 0 || entry->IsPassive() || entry->HasEffect(SPELL_EFFECT_SKILL_STEP);
 
                 SpellLearnSpellMapBounds db_node_bounds = dbSpellLearnSpells.equal_range(spell);
 

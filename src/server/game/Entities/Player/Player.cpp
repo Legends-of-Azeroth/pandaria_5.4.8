@@ -677,7 +677,7 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
     }
 
     // original items
-    if (CharStartOutfitEntry const* oEntry = GetCharStartOutfitEntry(createInfo->Race, createInfo->Class, createInfo->Gender))
+    if (CharStartOutfitEntry const* oEntry = sDBCManager.GetCharStartOutfitEntry(createInfo->Race, createInfo->Class, createInfo->Gender))
     {
         for (int j = 0; j < MAX_OUTFIT_ITEMS; ++j)
         {
@@ -3503,7 +3503,7 @@ bool Player::AddTalent(uint32 spellId, uint8 spec, bool learning)
     PlayerTalentMap::iterator itr = GetTalentMap(spec)->find(spellId);
     if (itr == GetTalentMap(spec)->end())
     {
-        if (TalentSpellPos const* talentPos = GetTalentSpellPos(spellId))
+        if (TalentSpellPos const* talentPos = sDBCManager.GetTalentSpellPos(spellId))
         {
             PlayerTalent* newtalent = new PlayerTalent();
 
@@ -3785,7 +3785,7 @@ bool Player::AddSpell(uint32 spellId, bool active, bool learning, bool dependent
         GetBattlePetMgr().Create(species);
     }
 
-    uint32 talentCost = GetTalentSpellCost(spellId);
+    uint32 talentCost = sDBCManager.GetTalentSpellCost(spellId);
 
     // cast talents with SPELL_EFFECT_LEARN_SPELL (other dependent spells will learned later as not auto-learned)
     // note: all spells with SPELL_EFFECT_LEARN_SPELL isn't passive
@@ -3852,7 +3852,7 @@ bool Player::AddSpell(uint32 spellId, bool active, bool learning, bool dependent
                 // lockpicking/runeforging special case, not have ABILITY_LEARNED_ON_GET_RACE_OR_CLASS_SKILL
                 ((skill->id == SKILL_LOCKPICKING || skill->id == SKILL_RUNEFORGING) && (itr->second->max_value == 0 || itr->second->max_value == 1)))
             {
-                if (auto entry = GetSkillRaceClassInfo(skill->id, GetRace(), GetClass()))
+                if (auto entry = sDBCManager.GetSkillRaceClassInfo(skill->id, GetRace(), GetClass()))
                     LearnDefaultSkill(entry);
             }
         }
@@ -3994,7 +3994,7 @@ void Player::RemoveSpell(uint32 spell_id, bool disabled, bool learn_low_rank)
     // unlearn non talent higher ranks (recursive)
     if (uint32 nextSpell = sSpellMgr->GetNextSpellInChain(spell_id))
     {
-        if (HasSpell(nextSpell) && !GetTalentSpellPos(nextSpell))
+        if (HasSpell(nextSpell) && !sDBCManager.GetTalentSpellPos(nextSpell))
             RemoveSpell(nextSpell, disabled, false);
     }
     //unlearn spells dependent from recently removed spells
@@ -4048,7 +4048,7 @@ void Player::RemoveSpell(uint32 spell_id, bool disabled, bool learn_low_rank)
         atrigger->Remove();
 
     // free talent points
-    uint32 talentCosts = GetTalentSpellCost(spell_id);
+    uint32 talentCosts = sDBCManager.GetTalentSpellCost(spell_id);
     if (talentCosts > 0 && giveTalentPoints)
     {
         if (talentCosts < GetUsedTalentCount())
@@ -5648,9 +5648,9 @@ void Player::UpdateLocalChannels(uint32 newZone)
                     if (channel->flags & CHANNEL_DBC_FLAG_CITY_ONLY)
                         currentNameExt = sObjectMgr->GetTrinityString(LANG_CHANNEL_CITY, LocaleConstant(sWorld->getIntConfig(CONFIG_CHANNEL_CONSTANT_LOCALE)));
                     else
-                        currentNameExt = current_zone->area_name[GetSession()->GetSessionDbcLocale()];
+                        currentNameExt = current_zone->area_name;
 
-                    snprintf(new_channel_name_buf, 200, channel->pattern[sWorld->getIntConfig(CONFIG_CHANNEL_CONSTANT_LOCALE)], currentNameExt);
+                    snprintf(new_channel_name_buf, 200, channel->pattern, currentNameExt);
 
                     joinChannel = cMgr->GetJoinChannel(new_channel_name_buf, channel->ChannelID);
                     if (usedChannel)
@@ -5665,7 +5665,7 @@ void Player::UpdateLocalChannels(uint32 newZone)
                     }
                 }
                 else
-                    joinChannel = cMgr->GetJoinChannel(channel->pattern[sWorld->getIntConfig(CONFIG_CHANNEL_CONSTANT_LOCALE)], channel->ChannelID);
+                    joinChannel = cMgr->GetJoinChannel(channel->pattern, channel->ChannelID);
             }
             else
                 removeChannel = usedChannel;
@@ -6059,7 +6059,7 @@ bool Player::UpdateGatherSkill(uint32 skillId, uint32 skillValue, uint32 redLeve
             }
             if (GameObject const* gobject = lootObject->ToGameObject())
             {
-                uint32 gain = Trinity::XP::BaseGain(GetLevel(), gobject->GetGOInfo()->chest.xpLevel, GetContentLevelsForMapAndZone(GetMapId(), GetZoneId()));
+                uint32 gain = Trinity::XP::BaseGain(GetLevel(), gobject->GetGOInfo()->chest.xpLevel, sDBCManager.GetContentLevelsForMapAndZone(GetMapId(), GetZoneId()));
                 gain *= sWorld->getRate(RATE_XP_GATHER);
                 gain += GetXPRestBonus(gain);
 
@@ -6191,7 +6191,7 @@ void Player::UpdateSkillsForLevel()
             continue;
 
         uint32 pskill = itr->first;
-        SkillRaceClassInfoEntry const* entry = GetSkillRaceClassInfo(pskill, GetRace(), GetClass());
+        SkillRaceClassInfoEntry const* entry = sDBCManager.GetSkillRaceClassInfo(pskill, GetRace(), GetClass());
         if (!entry)
             continue;
 
@@ -6229,7 +6229,7 @@ void Player::UpdateSkillsToMaxSkillsForLevel()
             continue;
 
         uint32 pskill = itr->first;
-        SkillRaceClassInfoEntry const* entry = GetSkillRaceClassInfo(pskill, GetRace(), GetClass());
+        SkillRaceClassInfoEntry const* entry = sDBCManager.GetSkillRaceClassInfo(pskill, GetRace(), GetClass());
         if (!entry)
             continue;
 
@@ -16238,7 +16238,7 @@ bool Player::CanRewardQuest(Quest const* quest, uint32 rewardId, bool msg)
     if (quest->GetQuestPackageID())
     {
         bool hasFilteredQuestPackageReward = false;
-        if (std::vector<QuestPackageItemEntry const*> const* questPackageItems = GetQuestPackageItems(quest->GetQuestPackageID()))
+        if (std::vector<QuestPackageItemEntry const*> const* questPackageItems = sDB2Manager.GetQuestPackageItems(quest->GetQuestPackageID()))
         {
             for (QuestPackageItemEntry const* questPackageItem : *questPackageItems)
             {
@@ -16260,7 +16260,7 @@ bool Player::CanRewardQuest(Quest const* quest, uint32 rewardId, bool msg)
 
         if (!hasFilteredQuestPackageReward)
         {
-            if (std::vector<QuestPackageItemEntry const*> const* questPackageItems = GetQuestPackageItemsFallback(quest->GetQuestPackageID()))
+            if (std::vector<QuestPackageItemEntry const*> const* questPackageItems = sDB2Manager.GetQuestPackageItemsFallback(quest->GetQuestPackageID()))
             {
                 for (QuestPackageItemEntry const* questPackageItem : *questPackageItems)
                 {
@@ -20367,7 +20367,7 @@ void Player::_LoadBoundInstances(PreparedQueryResult result)
             bool deleteInstance = false;
 
             MapEntry const* mapEntry = sMapStore.LookupEntry(mapId);
-            std::string mapname = mapEntry ? mapEntry->name[sObjectMgr->GetDBCLocaleIndex()] : "Unknown";
+            std::string mapname = mapEntry ? mapEntry->name : "Unknown";
 
             if (!mapEntry || (!mapEntry->IsDungeon() && !mapEntry->IsScenario()))
             {
@@ -20381,7 +20381,7 @@ void Player::_LoadBoundInstances(PreparedQueryResult result)
             }
             else
             {
-                MapDifficulty const* mapDiff = GetMapDifficultyData(mapId, Difficulty(difficulty));
+                MapDifficulty const* mapDiff = sDBCManager.GetMapDifficultyData(mapId, Difficulty(difficulty));
                 if (!mapDiff && !mapEntry->IsScenario())
                 {
                     TC_LOG_ERROR("entities.player", "_LoadBoundInstances: player %s(%d) has bind to not existed difficulty %d instance for map %u (%s)", GetName().c_str(), GetGUID().GetCounter(), difficulty, mapId, mapname.c_str());
@@ -20417,7 +20417,7 @@ void Player::_LoadBoundInstances(PreparedQueryResult result)
 InstancePlayerBind* Player::GetBoundInstance(uint32 mapid, Difficulty difficulty)
 {
     // some instances only have one difficulty
-    MapDifficulty const* mapDiff = GetDownscaledMapDifficultyData(mapid, difficulty);
+    MapDifficulty const* mapDiff = sDBCManager.GetDownscaledMapDifficultyData(mapid, difficulty);
     if (!mapDiff)
         return nullptr;
 
@@ -20763,7 +20763,7 @@ bool Player::Satisfy(AccessRequirement const* ar, uint32 target_map, bool report
                 missingAchievement = ar->achievement;
 
         Difficulty target_difficulty = GetDifficulty(mapEntry->IsRaid());
-        MapDifficulty const* mapDiff = GetDownscaledMapDifficultyData(target_map, target_difficulty);
+        MapDifficulty const* mapDiff = sDBCManager.GetDownscaledMapDifficultyData(target_map, target_difficulty);
         if (LevelMin || LevelMax || missingItem || missingQuest || missingAchievement)
         {
             if (report)
@@ -25522,7 +25522,7 @@ void Player::ResetSpells(bool myClassOnly)
 
             // skip spells with first rank learned as talent (and all talents then also)
             uint32 firstRank = spellInfo->GetFirstRankSpell()->Id;
-            if (GetTalentSpellCost(firstRank) > 0)
+            if (sDBCManager.GetTalentSpellCost(firstRank) > 0)
                 continue;
 
             // skip broken spells
@@ -25723,7 +25723,7 @@ void Player::LearnSkillRewardedSpells(uint32 id, uint32 value)
 {
     uint32 raceMask  = GetRaceMask();
     uint32 classMask = GetClassMask();
-    auto abilities = GetAbilitiesBySkill(id);
+    auto abilities = sDBCManager.GetSkillLineAbilitiesBySkill(id);
     if (!abilities)
         return;
     for (auto&& ability : *abilities)
@@ -27743,7 +27743,7 @@ bool Player::IsKnowHowFlyIn(uint32 mapid, uint32 zone) const
         return true;
 
     // continent checked in SpellInfo::CheckLocation at cast and area update
-    uint32 v_map = GetVirtualMapForMapAndZone(mapid, zone);
+    uint32 v_map = sDBCManager.GetVirtualMapForMapAndZone(mapid, zone);
     switch (v_map)
     {
         case 0:   // Eastern Kingdoms
@@ -31498,7 +31498,7 @@ void Player::CleanNotForMyClass(bool talents, bool common)
         if (skillLine->racemask && skillLine->racemask & GetRaceMask())
             continue;
 
-        if (GetSkillRaceClassInfo(skillLine->skillId, GetRace(), myClass))
+        if (sDBCManager.GetSkillRaceClassInfo(skillLine->skillId, GetRace(), myClass))
             continue;
 
         SetSkill(skillLine->skillId, 0, 0, 0);

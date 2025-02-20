@@ -1450,7 +1450,7 @@ void Spell::EffectPowerBurn(SpellEffIndex effIndex)
         return;
 
     if (unitTarget->GetPowerType() != powerType)
-        if (m_spellInfo->Id != 108222 || GetPowerIndexByClass(powerType, unitTarget->GetClass()) == MAX_POWERS) // Mana Void (Cobalt Globule)
+        if (m_spellInfo->Id != 108222 || sDBCManager.GetPowerIndexByClass(powerType, unitTarget->GetClass()) == MAX_POWERS) // Mana Void (Cobalt Globule)
             return;
 
     // burn x% of target's mana, up to maximum of 2x% of caster's mana (Mana Burn)
@@ -3087,7 +3087,7 @@ void Spell::EffectLearnSkill(SpellEffIndex effIndex)
 
     uint32 skillid = m_spellInfo->Effects[effIndex].MiscValue;
 
-    auto entry = GetSkillRaceClassInfo(skillid, unitTarget->GetRace(), unitTarget->GetClass());
+    auto entry = sDBCManager.GetSkillRaceClassInfo(skillid, unitTarget->GetRace(), unitTarget->GetClass());
     if (!entry)
     {
         TC_LOG_ERROR("spells", "Spell::EffectLearnSkill skill (%u) not found in SkillRaceClassInfo.dbc", skillid);
